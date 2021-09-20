@@ -260,25 +260,6 @@ contract SphynxToken is BEP20, Manageable {
 		super._transfer(from, to, amount);
 	}
 
-	// // Swap tokens on SphynxSwap
-	// function swapTokensForEthOnSphynxSwap(uint256 tokenAmount, address to) private {
-	//     // generate the pancakeswap pair path of token -> weth
-	//     address[] memory path = new address[](2);
-	//     path[0] = address(this);
-	//     path[1] = pancakeSwapRouter.WETH();
-
-	//     _approve(address(this), address(pancakeSwapRouter), tokenAmount);
-
-	//     // make the swap
-	//     pancakeSwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-	//         tokenAmount,
-	//         0, // accept any amount of ETH
-	//         path,
-	//         to,
-	//         block.timestamp
-	//     );
-	// }
-
 	// Swap tokens on PacakeSwap
 	function swapTokensForEth(uint256 tokenAmount, address to) private {
 		// generate the pancakeswap pair path of token -> weth
