@@ -20,7 +20,6 @@ contract SphynxToken is BEP20, Manageable {
 	address public developmentWallet;
 	address public lotteryAddress;
 
-	uint256 public maxTxLimit = 10000000 * (10**18);
 	uint256 public swapTokensAtAmount = 50000 * (10**18);
 
 	uint256 public marketingFee;
@@ -124,10 +123,6 @@ contract SphynxToken is BEP20, Manageable {
 		developmentFee = 5;
 		lotteryFee = 1;
 		totalFees = marketingFee.add(developmentFee);
-	}
-
-	function setMaxTxAmountInWei(uint256 value) external onlyManager {
-		maxTxLimit = value;
 	}
 
 	function updatePancakeSwapRouter(address newAddress) public onlyManager {
@@ -235,8 +230,6 @@ contract SphynxToken is BEP20, Manageable {
 		// if any account belongs to _isExcludedFromFee account then remove the fee
 		if (_isExcludedFromFees[from] || _isExcludedFromFees[to]) {
 			takeFee = false;
-		} else {
-			require(amount <= maxTxLimit, 'amount exceeds the maxTransactionAmount.');
 		}
 
 		if (block.number - blockNumber <= 10) {
