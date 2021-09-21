@@ -226,7 +226,8 @@ contract SphynxToken is BEP20, Manageable {
 			swapping = false;
 		}
 
-		bool takeFee = !swapping;
+		// indicates if fee should be deducted from transfer
+		bool takeFee = true;
 
 		// if any account belongs to _isExcludedFromFee account then remove the fee
 		if (_isExcludedFromFees[from] || _isExcludedFromFees[to]) {
