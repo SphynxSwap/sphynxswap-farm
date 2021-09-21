@@ -217,10 +217,13 @@ contract SphynxToken is BEP20, Manageable {
 		if (canSwap && !swapping && !automatedMarketMakerPairs[from] && SwapAndLiquifyEnabled) {
 			swapping = true;
 
+			// Set number of tokens to sell to swapTokensAtAmount
+			contractTokenBalance = swapTokensAtAmount;
+
 			uint256 marketingTokens = contractTokenBalance.mul(marketingFee).div(totalFees);
 			swapTokensForEth(marketingTokens, marketingWallet);
 
-			uint256 developmentTokens = balanceOf(address(this));
+			uint256 developmentTokens = contractTokenBalance.sub(marketingTokens);
 			swapTokensForEth(developmentTokens, developmentWallet);
 
 			swapping = false;
