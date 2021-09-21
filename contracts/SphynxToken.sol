@@ -48,7 +48,7 @@ contract SphynxToken is BEP20, Manageable {
 	event UpdatePancakeSwapRouter(address indexed newAddress, address indexed oldAddress);
 	event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiqudity);
 
-	constructor() public BEP20('Sphynx Token', 'SYS') {
+	constructor() public BEP20('Sphynx Token', 'SPHYNX') {
 		uint256 _marketingFee = 5;
 		uint256 _developmentFee = 5;
 		uint256 _lotteryFee = 1;
