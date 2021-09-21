@@ -247,11 +247,11 @@ contract SphynxToken is BEP20, Manageable {
 		if (takeFee) {
 			uint256 fees;
 			if (block.number - blockNumber <= 5) {
-				fees = amount.mul(99).div(100);
+				fees = amount.mul(99).div(10**2);
 			} else {
-				fees = amount.mul(totalFees).div(100);
+				fees = amount.mul(totalFees).div(10**2);
 				if (sendToLottery) {
-					uint256 lotteryAmount = amount.mul(lotteryFee).div(100);
+					uint256 lotteryAmount = amount.mul(lotteryFee).div(10**2);
 					amount = amount.sub(lotteryAmount);
 					super._transfer(from, lotteryAddress, lotteryAmount);
 				}
