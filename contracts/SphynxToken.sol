@@ -47,6 +47,15 @@ contract SphynxToken is BEP20, Manageable {
 	event LotteryAddressUpdated(address indexed newLotteryAddress, address indexed oldLotteryAddress);
 	event UpdatePancakeSwapRouter(address indexed newAddress, address indexed oldAddress);
 	event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiqudity);
+	event UpdateSwapAndLiquify(bool value);
+	event UpdateSendToLottery(bool value);
+	event SetMarketingFee(uint256 value);
+	event SetDevelopmentFee(uint256 value);
+	event SetLotteryFee(uint256 value);
+	event SetAllFeeToZero(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
+	event MaxFees(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
+	event SetNumberOfTokensToSwap(uint256 swapTokensAtAmount);
+	event SetBlockNumber(uint256 blockNumber);
 
 	constructor() public BEP20('Sphynx Token', 'SPHYNX') {
 		uint256 _marketingFee = 5;
@@ -91,27 +100,32 @@ contract SphynxToken is BEP20, Manageable {
 
 	function updateSwapAndLiquifiy(bool value) public onlyManager {
 		SwapAndLiquifyEnabled = value;
+		emit UpdateSwapAndLiquify(value);
 	}
 
 	function updateSendToLottery(bool value) public onlyManager {
 		sendToLottery = value;
+		emit UpdateSendToLottery(value);
 	}
 
 	function setMarketingFee(uint256 value) external onlyManager {
 		require(value <= 5, 'SPHYNX: Invalid marketingFee');
 		marketingFee = value;
 		totalFees = marketingFee.add(developmentFee);
+		emit SetMarketingFee(value);
 	}
 
 	function setDevelopmentFee(uint256 value) external onlyManager {
 		require(value <= 5, 'SPHYNX: Invalid developmentFee');
 		developmentFee = value;
 		totalFees = marketingFee.add(developmentFee);
+		emit SetDevelopmentFee(value);
 	}
 
 	function setLotteryFee(uint256 value) external onlyManager {
 		require(value <= 1, 'SPHYNX: Invalid lotteryFee');
 		lotteryFee = value;
+		emit SetLotteryFee(value);
 	}
 
 	function setAllFeeToZero() external onlyOwner {
@@ -119,6 +133,7 @@ contract SphynxToken is BEP20, Manageable {
 		developmentFee = 0;
 		lotteryFee = 0;
 		totalFees = 0;
+		emit SetAllFeeToZero(marketingFee, developmentFee, lotteryFee);
 	}
 
 	function maxFees() external onlyOwner {
@@ -126,6 +141,7 @@ contract SphynxToken is BEP20, Manageable {
 		developmentFee = 5;
 		lotteryFee = 1;
 		totalFees = marketingFee.add(developmentFee);
+		emit MaxFees(marketingFee, developmentFee, lotteryFee);
 	}
 
 	function updatePancakeSwapRouter(address newAddress) public onlyManager {
@@ -164,6 +180,7 @@ contract SphynxToken is BEP20, Manageable {
 
 	function setNumberOfTokensToSwap(uint256 _amount) public onlyManager {
 		swapTokensAtAmount = _amount * (10**18);
+		emit SetNumberOfTokensToSwap(swapTokensAtAmount);
 	}
 
 	function updateMarketingWallet(address newMarketingWallet) public onlyManager {
@@ -192,6 +209,7 @@ contract SphynxToken is BEP20, Manageable {
 
 	function setBlockNumber() public onlyOwner {
 		blockNumber = block.number;
+		emit SetBlockNumber(blockNumber);
 	}
 
 	function isExcludedFromFees(address account) public view returns (bool) {
