@@ -98,16 +98,19 @@ contract SphynxToken is BEP20, Manageable {
 	}
 
 	function setMarketingFee(uint256 value) external onlyManager {
+		require(value <= 5, 'SPHYNX: Invalid marketingFee');
 		marketingFee = value;
 		totalFees = marketingFee.add(developmentFee);
 	}
 
 	function setDevelopmentFee(uint256 value) external onlyManager {
+		require(value <= 5, 'SPHYNX: Invalid developmentFee');
 		developmentFee = value;
 		totalFees = marketingFee.add(developmentFee);
 	}
 
 	function setLotteryFee(uint256 value) external onlyManager {
+		require(value <= 1, 'SPHYNX: Invalid lotteryFee');
 		lotteryFee = value;
 	}
 
