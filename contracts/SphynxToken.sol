@@ -149,7 +149,9 @@ contract SphynxToken is BEP20, Manageable {
 		emit UpdatePancakeSwapRouter(newAddress, address(pancakeSwapRouter));
 		pancakeSwapRouter = IPancakeRouter02(newAddress);
 		address _pancakeSwapPair = IPancakeFactory(pancakeSwapRouter.factory()).createPair(address(this), pancakeSwapRouter.WETH());
+		_setAutomatedMarketMakerPair(pancakeSwapPair, false);
 		pancakeSwapPair = _pancakeSwapPair;
+		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
 	}
 
 	function excludeFromFees(address account, bool excluded) public onlyManager {
