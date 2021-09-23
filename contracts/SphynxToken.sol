@@ -166,6 +166,7 @@ contract SphynxToken is BEP20, Manageable {
 	function updateMarketingWallet(address newMarketingWallet) public onlyManager {
 		require(newMarketingWallet != marketingWallet, 'SPHYNX: The marketing wallet is already this address');
 		excludeFromFees(newMarketingWallet, true);
+		excludeFromFees(marketingWallet, false);
 		emit MarketingWalletUpdated(newMarketingWallet, marketingWallet);
 		marketingWallet = newMarketingWallet;
 	}
@@ -173,6 +174,7 @@ contract SphynxToken is BEP20, Manageable {
 	function updateDevelopmentgWallet(address newDevelopmentWallet) public onlyManager {
 		require(newDevelopmentWallet != developmentWallet, 'SPHYNX: The development wallet is already this address');
 		excludeFromFees(newDevelopmentWallet, true);
+		excludeFromFees(developmentWallet, false);
 		emit DevelopmentWalletUpdated(newDevelopmentWallet, developmentWallet);
 		developmentWallet = newDevelopmentWallet;
 	}
@@ -180,6 +182,7 @@ contract SphynxToken is BEP20, Manageable {
 	function updateLotteryAddress(address newLotteryAddress) public onlyManager {
 		require(newLotteryAddress != lotteryAddress, 'SPHYNX: The lottery wallet is already this address');
 		excludeFromFees(newLotteryAddress, true);
+		excludeFromFees(lotteryAddress, false);
 		emit LotteryAddressUpdated(newLotteryAddress, lotteryAddress);
 		lotteryAddress = newLotteryAddress;
 	}
