@@ -80,15 +80,15 @@ contract SphynxToken is BEP20, Manageable {
 
 		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
 
-		address _owner = address(0x4711ae0ffe1761f44692299EA6C0Ee16067C3269);
+		// address _owner = address(0x4711ae0ffe1761f44692299EA6C0Ee16067C3269);
 
 		// exclude from paying fees or having max transaction amount
 		excludeFromFees(marketingWallet, true);
 		excludeFromFees(developmentWallet, true);
 		excludeFromFees(address(this), true);
-		excludeFromFees(_owner, true);
+		excludeFromFees(owner(), true);
 
-		_mint(_owner, 1000000000 * (10**18));
+		_mint(owner(), 1000000000 * (10**18));
 	}
 
 	receive() external payable {}
