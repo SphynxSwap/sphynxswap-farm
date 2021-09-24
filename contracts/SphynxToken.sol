@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.2;
+pragma solidity 0.6.12;
 
 import '@sphynxswap/sphynx-swap-lib/contracts/access/Manageable.sol';
 import '@sphynxswap/sphynx-swap-lib/contracts/token/BEP20/BEP20.sol';
