@@ -16,6 +16,9 @@ contract SphynxToken is BEP20, Manageable {
 
 	bool private swapping;
 
+	address public masterChef;
+	address public sphynxBridge;
+
 	address public marketingWallet;
 	address public developmentWallet;
 	address public lotteryAddress;
@@ -38,6 +41,11 @@ contract SphynxToken is BEP20, Manageable {
 	// could be subject to a maximum transfer amount
 	mapping(address => bool) public automatedMarketMakerPairs;
 
+	modifier onlyMasterChefAndBridge() {
+		require(msg.sender == masterChef || msg.sender == sphynxBridge, 'Permission Denied');
+		_;
+	}
+
 	// Contract Events
 	event ExcludeFromFees(address indexed account, bool isExcluded);
 	event ExcludeMultipleAccountsFromFees(address[] accounts, bool isExcluded);
@@ -56,6 +64,8 @@ contract SphynxToken is BEP20, Manageable {
 	event MaxFees(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
 	event SetNumberOfTokensToSwap(uint256 swapTokensAtAmount);
 	event SetBlockNumber(uint256 blockNumber);
+	event UpdateMasterChef(address masterChef);
+	event UpdateSphynxBridge(address sphynxBridge);
 
 	constructor() public BEP20('Sphynx Token', 'SPHYNX') {
 		uint256 _marketingFee = 5;
@@ -92,7 +102,7 @@ contract SphynxToken is BEP20, Manageable {
 	receive() external payable {}
 
 	// mint function for masterchef;
-	function mint(address to, uint256 amount) public onlyOwner {
+	function mint(address to, uint256 amount) public onlyMasterChefAndBridge {
 		_mint(to, amount);
 	}
 
@@ -154,6 +164,19 @@ contract SphynxToken is BEP20, Manageable {
 		_setAutomatedMarketMakerPair(pancakeSwapPair, false);
 		pancakeSwapPair = _pancakeSwapPair;
 		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
+	}
+
+	function updateMasterChef(address _masterChef) public onlyManager {
+		require(masterChef != _masterChef, 'SPHYNX: MasterChef already exists!');
+		masterChef = _masterChef;
+		emit UpdateMasterChef(_masterChef);
+	}
+
+	function updateSphynxBridge(address _sphynxBridge) public onlyManager {
+		require(sphynxBridge != _sphynxBridge, 'SPHYNX: SphynxBridge already exists!');
+		sphynxBridge = _sphynxBridge;
+		_isExcludedFromFees[sphynxBridge] = true;
+		emit UpdateSphynxBridge(_sphynxBridge);
 	}
 
 	function excludeFromFees(address account, bool excluded) public onlyManager {
