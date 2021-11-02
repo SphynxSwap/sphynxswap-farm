@@ -72,15 +72,13 @@ contract SphynxToken is BEP20, Manageable {
 		developmentWallet = address(0x4A48062b88d5B8e9f0B7A5149F87288899C2d7f9);
 
 		IPancakeRouter02 _pancakeSwapRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // mainnet
-		// Create a pancakewap pair for SYS
+		// Create a pancakewap pair for SPHYNX
 		address _pancakeSwapPair = IPancakeFactory(_pancakeSwapRouter.factory()).createPair(address(this), _pancakeSwapRouter.WETH());
 
 		pancakeSwapRouter = _pancakeSwapRouter;
 		pancakeSwapPair = _pancakeSwapPair;
 
 		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
-
-		// address _owner = address(0x4711ae0ffe1761f44692299EA6C0Ee16067C3269);
 
 		// exclude from paying fees or having max transaction amount
 		excludeFromFees(marketingWallet, true);
@@ -96,6 +94,10 @@ contract SphynxToken is BEP20, Manageable {
 	// mint function for masterchef;
 	function mint(address to, uint256 amount) public onlyOwner {
 		_mint(to, amount);
+	}
+
+	function burn(uint256 amount) public {
+		_burn(msg.sender, amount);
 	}
 
 	function updateSwapAndLiquifiy(bool value) public onlyManager {
