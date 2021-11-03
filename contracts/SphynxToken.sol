@@ -8,39 +8,6 @@ import './dependencies/pancake-swap-core/contracts/interfaces/IPancakePair.sol';
 import './dependencies/pancake-swap-core/contracts/interfaces/IPancakeFactory.sol';
 import './dependencies/pancake-swap-perphery/contracts/interfaces/IPancakeRouter02.sol';
 
-interface AggregatorV3Interface {
-	function decimals() external view returns (uint8);
-
-	function description() external view returns (string memory);
-
-	function version() external view returns (uint256);
-
-	// getRoundData and latestRoundData should both raise "No data present"
-	// if they do not have data to report, instead of returning unset values
-	// which could be misinterpreted as actual reported values.
-	function getRoundData(uint80 _roundId)
-		external
-		view
-		returns (
-			uint80 roundId,
-			int256 answer,
-			uint256 startedAt,
-			uint256 updatedAt,
-			uint80 answeredInRound
-		);
-
-	function latestRoundData()
-		external
-		view
-		returns (
-			uint80 roundId,
-			int256 answer,
-			uint256 startedAt,
-			uint256 updatedAt,
-			uint80 answeredInRound
-		);
-}
-
 contract SphynxToken is BEP20, Manageable {
 	using SafeMath for uint256;
 
@@ -54,10 +21,8 @@ contract SphynxToken is BEP20, Manageable {
 
 	address payable public marketingWallet = payable(0x982687617bc9a76420138a0F82b2fC1B8B11BbE3);
 	address payable public developmentWallet = payable(0x4A48062b88d5B8e9f0B7A5149F87288899C2d7f9);
-
 	address public lotteryAddress;
 
-	AggregatorV3Interface internal priceFeed;
 	uint256 public bnbAmountToSwap = 5;
 
 	uint256 public marketingFee;
@@ -121,8 +86,6 @@ contract SphynxToken is BEP20, Manageable {
 		pancakeSwapPair = _pancakeSwapPair;
 
 		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
-
-		priceFeed = AggregatorV3Interface(0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE);
 
 		// exclude from paying fees or having max transaction amount
 		excludeFromFees(marketingWallet, true);
