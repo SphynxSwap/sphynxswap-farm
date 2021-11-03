@@ -52,11 +52,13 @@ contract SphynxToken is BEP20, Manageable {
 	address public masterChef;
 	address public sphynxBridge;
 
-	address public marketingWallet;
-	address public developmentWallet;
+	address payable public marketingWallet = payable(0x982687617bc9a76420138a0F82b2fC1B8B11BbE3);
+	address payable public developmentWallet = payable(0x4A48062b88d5B8e9f0B7A5149F87288899C2d7f9);
+
 	address public lotteryAddress;
 
-	uint256 public swapTokensAtAmount = 50000 * (10**18);
+	AggregatorV3Interface internal priceFeed;
+	uint256 public bnbAmountToSwap = 5;
 
 	uint256 public marketingFee;
 	uint256 public developmentFee;
@@ -95,7 +97,7 @@ contract SphynxToken is BEP20, Manageable {
 	event SetLotteryFee(uint256 value);
 	event SetAllFeeToZero(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
 	event MaxFees(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
-	event SetNumberOfTokensToSwap(uint256 swapTokensAtAmount);
+	event SetBnbAmountToSwap(uint256 bnbAmountToSwap);
 	event SetBlockNumber(uint256 blockNumber);
 	event UpdateMasterChef(address masterChef);
 	event UpdateSphynxBridge(address sphynxBridge);
@@ -111,9 +113,6 @@ contract SphynxToken is BEP20, Manageable {
 		totalFees = _marketingFee.add(_developmentFee);
 		blockNumber = 0;
 
-		marketingWallet = address(0x982687617bc9a76420138a0F82b2fC1B8B11BbE3);
-		developmentWallet = address(0x4A48062b88d5B8e9f0B7A5149F87288899C2d7f9);
-
 		IPancakeRouter02 _pancakeSwapRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // mainnet
 		// Create a pancakewap pair for SPHYNX
 		address _pancakeSwapPair = IPancakeFactory(_pancakeSwapRouter.factory()).createPair(address(this), _pancakeSwapRouter.WETH());
@@ -122,6 +121,8 @@ contract SphynxToken is BEP20, Manageable {
 		pancakeSwapPair = _pancakeSwapPair;
 
 		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
+
+		priceFeed = AggregatorV3Interface(0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE);
 
 		// exclude from paying fees or having max transaction amount
 		excludeFromFees(marketingWallet, true);
@@ -238,9 +239,9 @@ contract SphynxToken is BEP20, Manageable {
 		emit SetAutomatedMarketMakerPair(pair, value);
 	}
 
-	function setNumberOfTokensToSwap(uint256 _amount) public onlyManager {
-		swapTokensAtAmount = _amount * (10**18);
-		emit SetNumberOfTokensToSwap(swapTokensAtAmount);
+	function setBnbAmountToSwap(uint256 _bnbAmount) public onlyManager {
+		bnbAmountToSwap = _bnbAmount;
+		emit SetBnbAmountToSwap(bnbAmountToSwap);
 	}
 
 	function updateMarketingWallet(address newMarketingWallet) public onlyManager {
@@ -248,7 +249,7 @@ contract SphynxToken is BEP20, Manageable {
 		excludeFromFees(newMarketingWallet, true);
 		excludeFromFees(marketingWallet, false);
 		emit MarketingWalletUpdated(newMarketingWallet, marketingWallet);
-		marketingWallet = newMarketingWallet;
+		marketingWallet = payable(newMarketingWallet);
 	}
 
 	function updateDevelopmentgWallet(address newDevelopmentWallet) public onlyManager {
@@ -256,7 +257,7 @@ contract SphynxToken is BEP20, Manageable {
 		excludeFromFees(newDevelopmentWallet, true);
 		excludeFromFees(developmentWallet, false);
 		emit DevelopmentWalletUpdated(newDevelopmentWallet, developmentWallet);
-		developmentWallet = newDevelopmentWallet;
+		developmentWallet = payable(newDevelopmentWallet);
 	}
 
 	function updateLotteryAddress(address newLotteryAddress) public onlyManager {
@@ -290,21 +291,16 @@ contract SphynxToken is BEP20, Manageable {
 		}
 
 		uint256 contractTokenBalance = balanceOf(address(this));
+		uint256 bnbTokenAmount = _getTokenAmountFromBNB();
 
-		bool canSwap = contractTokenBalance >= swapTokensAtAmount;
+		bool canSwap = contractTokenBalance >= bnbTokenAmount;
 
 		if (canSwap && !swapping && !automatedMarketMakerPairs[from] && SwapAndLiquifyEnabled) {
 			swapping = true;
 
-			// Set number of tokens to sell to swapTokensAtAmount
-			contractTokenBalance = swapTokensAtAmount;
-
-			uint256 marketingTokens = contractTokenBalance.mul(marketingFee).div(totalFees);
-			swapTokensForEth(marketingTokens, marketingWallet);
-
-			uint256 developmentTokens = contractTokenBalance.sub(marketingTokens);
-			swapTokensForEth(developmentTokens, developmentWallet);
-
+			// Set number of tokens to sell to bnbTokenAmount
+			contractTokenBalance = bnbTokenAmount;
+			swapTokens(contractTokenBalance);
 			swapping = false;
 		}
 
@@ -341,8 +337,17 @@ contract SphynxToken is BEP20, Manageable {
 		super._transfer(from, to, amount);
 	}
 
+	function swapTokens(uint256 tokenAmount) private {
+		swapTokensForEth(tokenAmount);
+		uint256 swappedBNB = address(this).balance;
+		uint256 marketingBNB = swappedBNB.mul(marketingFee).div(totalFees);
+		uint256 developmentBNB = swappedBNB.sub(marketingBNB);
+		transferBNBToMarketingWallet(marketingBNB);
+		transferBNBToDevelopmentWallet(developmentBNB);
+	}
+
 	// Swap tokens on PacakeSwap
-	function swapTokensForEth(uint256 tokenAmount, address to) private {
+	function swapTokensForEth(uint256 tokenAmount) private {
 		// generate the pancakeswap pair path of token -> weth
 		address[] memory path = new address[](2);
 		path[0] = address(this);
@@ -355,8 +360,26 @@ contract SphynxToken is BEP20, Manageable {
 			tokenAmount,
 			0, // accept any amount of ETH
 			path,
-			to,
+			address(this),
 			block.timestamp
 		);
+	}
+
+	function _getTokenAmountFromBNB() internal returns (uint256) {
+		uint256 tokenAmount;
+		address[] memory path = new address[](2);
+		path[0] = pancakeSwapRouter.WETH();
+		path[1] = address(this);
+
+		uint256[] memory amounts = pancakeSwapRouter.getAmountsOut(bnbAmountToSwap, path);
+		tokenAmount = amounts[1];
+	}
+
+	function transferBNBToMarketingWallet(uint256 amount) private {
+		marketingWallet.transfer(amount);
+	}
+
+	function transferBNBToDevelopmentWallet(uint256 amount) private {
+		developmentWallet.transfer(amount);
 	}
 }
