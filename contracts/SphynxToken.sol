@@ -4,15 +4,15 @@ pragma solidity 0.6.12;
 
 import '@sphynxswap/sphynx-swap-lib/contracts/access/Manageable.sol';
 import '@sphynxswap/sphynx-swap-lib/contracts/token/BEP20/BEP20.sol';
-import './dependencies/pancake-swap-core/contracts/interfaces/IPancakePair.sol';
-import './dependencies/pancake-swap-core/contracts/interfaces/IPancakeFactory.sol';
-import './dependencies/pancake-swap-perphery/contracts/interfaces/IPancakeRouter02.sol';
+import '@sphynxswap/swap-core/contracts/interfaces/ISphynxPair.sol';
+import '@sphynxswap/swap-core/contracts/interfaces/ISphynxFactory.sol';
+import '@sphynxswap/swap-periphery/contracts/interfaces/ISphynxRouter02.sol';
 
 contract SphynxToken is BEP20, Manageable {
 	using SafeMath for uint256;
 
-	IPancakeRouter02 public pancakeSwapRouter;
-	address public pancakeSwapPair;
+	ISphynxRouter02 public sphynxSwapRouter;
+	address public sphynxSwapPair;
 
 	bool private swapping;
 
@@ -53,7 +53,7 @@ contract SphynxToken is BEP20, Manageable {
 	event MarketingWalletUpdated(address indexed newMarketingWallet, address indexed oldMarketingWallet);
 	event DevelopmentWalletUpdated(address indexed newDevelopmentWallet, address indexed oldDevelopmentWallet);
 	event LotteryAddressUpdated(address indexed newLotteryAddress, address indexed oldLotteryAddress);
-	event UpdatePancakeSwapRouter(address indexed newAddress, address indexed oldAddress);
+	event UpdateSphynxSwapRouter(address indexed newAddress, address indexed oldAddress);
 	event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiqudity);
 	event UpdateSwapAndLiquify(bool value);
 	event UpdateSendToLottery(bool value);
@@ -78,14 +78,14 @@ contract SphynxToken is BEP20, Manageable {
 		totalFees = _marketingFee.add(_developmentFee);
 		blockNumber = 0;
 
-		IPancakeRouter02 _pancakeSwapRouter = IPancakeRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // mainnet
-		// Create a pancakewap pair for SPHYNX
-		address _pancakeSwapPair = IPancakeFactory(_pancakeSwapRouter.factory()).createPair(address(this), _pancakeSwapRouter.WETH());
+		ISphynxRouter02 _sphynxSwapRouter = ISphynxRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // mainnet
+		// Create a sphynxswap pair for SPHYNX
+		address _sphynxSwapPair = ISphynxFactory(_sphynxSwapRouter.factory()).createPair(address(this), _sphynxSwapRouter.WETH());
 
-		pancakeSwapRouter = _pancakeSwapRouter;
-		pancakeSwapPair = _pancakeSwapPair;
+		sphynxSwapRouter = _sphynxSwapRouter;
+		sphynxSwapPair = _sphynxSwapPair;
 
-		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
+		_setAutomatedMarketMakerPair(sphynxSwapPair, true);
 
 		// exclude from paying fees or having max transaction amount
 		excludeFromFees(marketingWallet, true);
@@ -153,14 +153,14 @@ contract SphynxToken is BEP20, Manageable {
 		emit MaxFees(marketingFee, developmentFee, lotteryFee);
 	}
 
-	function updatePancakeSwapRouter(address newAddress) public onlyManager {
-		require(newAddress != address(pancakeSwapRouter), 'SPHYNX: The router already has that address');
-		emit UpdatePancakeSwapRouter(newAddress, address(pancakeSwapRouter));
-		pancakeSwapRouter = IPancakeRouter02(newAddress);
-		address _pancakeSwapPair = IPancakeFactory(pancakeSwapRouter.factory()).createPair(address(this), pancakeSwapRouter.WETH());
-		_setAutomatedMarketMakerPair(pancakeSwapPair, false);
-		pancakeSwapPair = _pancakeSwapPair;
-		_setAutomatedMarketMakerPair(pancakeSwapPair, true);
+	function updateSphynxSwapRouter(address newAddress) public onlyManager {
+		require(newAddress != address(sphynxSwapRouter), 'SPHYNX: The router already has that address');
+		emit UpdateSphynxSwapRouter(newAddress, address(sphynxSwapRouter));
+		sphynxSwapRouter = ISphynxRouter02(newAddress);
+		address _sphynxSwapPair = ISphynxFactory(sphynxSwapRouter.factory()).createPair(address(this), sphynxSwapRouter.WETH());
+		_setAutomatedMarketMakerPair(sphynxSwapPair, false);
+		sphynxSwapPair = _sphynxSwapPair;
+		_setAutomatedMarketMakerPair(sphynxSwapPair, true);
 	}
 
 	function updateMasterChef(address _masterChef) public onlyManager {
@@ -311,15 +311,15 @@ contract SphynxToken is BEP20, Manageable {
 
 	// Swap tokens on PacakeSwap
 	function swapTokensForEth(uint256 tokenAmount) private {
-		// generate the pancakeswap pair path of token -> weth
+		// generate the sphynxswap pair path of token -> weth
 		address[] memory path = new address[](2);
 		path[0] = address(this);
-		path[1] = pancakeSwapRouter.WETH();
+		path[1] = sphynxSwapRouter.WETH();
 
-		_approve(address(this), address(pancakeSwapRouter), tokenAmount);
+		_approve(address(this), address(sphynxSwapRouter), tokenAmount);
 
 		// make the swap
-		pancakeSwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
+		sphynxSwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
 			tokenAmount,
 			0, // accept any amount of ETH
 			path,
@@ -331,10 +331,10 @@ contract SphynxToken is BEP20, Manageable {
 	function _getTokenAmountFromBNB() internal returns (uint256) {
 		uint256 tokenAmount;
 		address[] memory path = new address[](2);
-		path[0] = pancakeSwapRouter.WETH();
+		path[0] = sphynxSwapRouter.WETH();
 		path[1] = address(this);
 
-		uint256[] memory amounts = pancakeSwapRouter.getAmountsOut(bnbAmountToSwap, path);
+		uint256[] memory amounts = sphynxSwapRouter.getAmountsOut(bnbAmountToSwap, path);
 		tokenAmount = amounts[1];
 	}
 
