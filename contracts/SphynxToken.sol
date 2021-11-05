@@ -103,10 +103,6 @@ contract SphynxToken is BEP20, Manageable {
 		_mint(to, amount);
 	}
 
-	function burn(uint256 amount) public {
-		_burn(msg.sender, amount);
-	}
-
 	function updateSwapAndLiquifiy(bool value) public onlyManager {
 		SwapAndLiquifyEnabled = value;
 		emit UpdateSwapAndLiquify(value);
