@@ -175,6 +175,7 @@ contract SphynxToken is BEP20, Manageable {
 
 	function updateSphynxBridge(address _sphynxBridge) public onlyManager {
 		require(sphynxBridge != _sphynxBridge, 'SPHYNX: SphynxBridge already exists!');
+		_isExcludedFromFees[sphynxBridge] = false;
 		sphynxBridge = _sphynxBridge;
 		_isExcludedFromFees[sphynxBridge] = true;
 		emit UpdateSphynxBridge(_sphynxBridge);
