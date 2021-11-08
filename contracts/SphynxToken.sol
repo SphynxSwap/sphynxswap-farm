@@ -349,6 +349,7 @@ contract SphynxToken is BEP20, Manageable {
 
 		uint256[] memory amounts = sphynxSwapRouter.getAmountsOut(bnbAmountToSwap, path);
 		tokenAmount = amounts[1];
+		return tokenAmount;
 	}
 
 	function transferBNBToMarketingWallet(uint256 amount) private {
