@@ -31,7 +31,7 @@ contract SphynxToken is BEP20, Manageable {
 	uint256 public totalFees;
 	uint256 public blockNumber;
 
-	bool public SwapAndLiquifyEnabled = true;
+	bool public SwapAndLiquifyEnabled = false;
 	bool public sendToLottery = false;
 
 	// exlcude from fees and max transaction amount
@@ -265,19 +265,21 @@ contract SphynxToken is BEP20, Manageable {
 			return;
 		}
 
-		uint256 contractTokenBalance = balanceOf(address(this));
-		uint256 bnbTokenAmount = _getTokenAmountFromBNB();
+        if(SwapAndLiquifyEnabled) {
+            uint256 contractTokenBalance = balanceOf(address(this));
+            uint256 bnbTokenAmount = _getTokenAmountFromBNB();
 
-		bool canSwap = contractTokenBalance >= bnbTokenAmount;
+		    bool canSwap = contractTokenBalance >= bnbTokenAmount;
 
-		if (canSwap && !swapping && !automatedMarketMakerPairs[from] && SwapAndLiquifyEnabled) {
-			swapping = true;
+            if (canSwap && !swapping && !automatedMarketMakerPairs[from]) {
+                swapping = true;
 
-			// Set number of tokens to sell to bnbTokenAmount
-			contractTokenBalance = bnbTokenAmount;
-			swapTokens(contractTokenBalance);
-			swapping = false;
-		}
+                // Set number of tokens to sell to bnbTokenAmount
+                contractTokenBalance = bnbTokenAmount;
+                swapTokens(contractTokenBalance);
+                swapping = false;
+            }
+        }
 
 		// indicates if fee should be deducted from transfer
 		bool takeFee = true;
