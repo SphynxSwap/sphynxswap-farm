@@ -11,3 +11,10 @@ build/
 coverage/
 cache
 artifacts
+
+node_modules
+.env
+
+#Hardhat files
+cache
+artifacts
