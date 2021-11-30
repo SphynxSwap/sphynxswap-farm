@@ -82,7 +82,7 @@ contract SphynxToken is BEP20, Manageable {
 		totalFees = _marketingFee.add(_developmentFee);
 		blockNumber = 0;
 
-		ISphynxRouter02 _sphynxSwapRouter = ISphynxRouter02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // mainnet
+		ISphynxRouter02 _sphynxSwapRouter = ISphynxRouter02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // mainnet
 		// Create a sphynxswap pair for SPHYNX
 		address _sphynxSwapPair = ISphynxFactory(_sphynxSwapRouter.factory()).createPair(address(this), _sphynxSwapRouter.WETH());
 
@@ -161,7 +161,11 @@ contract SphynxToken is BEP20, Manageable {
 		require(newAddress != address(sphynxSwapRouter), 'SPHYNX: The router already has that address');
 		emit UpdateSphynxSwapRouter(newAddress, address(sphynxSwapRouter));
 		sphynxSwapRouter = ISphynxRouter02(newAddress);
-		address _sphynxSwapPair = ISphynxFactory(sphynxSwapRouter.factory()).createPair(address(this), sphynxSwapRouter.WETH());
+		address _sphynxSwapPair;
+		_sphynxSwapPair = ISphynxFactory(sphynxSwapRouter.factory()).getPair(address(this), sphynxSwapRouter.WETH());
+		if(_sphynxSwapPair == address(0)) {
+			_sphynxSwapPair = ISphynxFactory(sphynxSwapRouter.factory()).createPair(address(this), sphynxSwapRouter.WETH());
+		}
 		_setAutomatedMarketMakerPair(sphynxSwapPair, false);
 		sphynxSwapPair = _sphynxSwapPair;
 		_setAutomatedMarketMakerPair(sphynxSwapPair, true);
