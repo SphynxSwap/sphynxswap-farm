@@ -23,7 +23,7 @@ contract SphynxToken is BEP20, Manageable {
 	address payable public developmentWallet = payable(0x4A48062b88d5B8e9f0B7A5149F87288899C2d7f9);
 	address public lotteryAddress;
 
-	uint256 public bnbAmountToSwap = 5;
+	uint256 public nativeAmountToSwap = 5;
 
 	uint256 public marketingFee;
 	uint256 public developmentFee;
@@ -66,7 +66,7 @@ contract SphynxToken is BEP20, Manageable {
 	event SetLotteryFee(uint256 value);
 	event SetAllFeeToZero(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
 	event MaxFees(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
-	event SetBnbAmountToSwap(uint256 bnbAmountToSwap);
+	event SetNativeAmountToSwap(uint256 nativeAmountToSwap);
 	event SetBlockNumber(uint256 blockNumber);
 	event UpdateMasterChef(address masterChef);
 	event UpdateSphynxBridge(address sphynxBridge);
@@ -218,9 +218,9 @@ contract SphynxToken is BEP20, Manageable {
 		emit SetAutomatedMarketMakerPair(pair, value);
 	}
 
-	function setBnbAmountToSwap(uint256 _bnbAmount) public onlyManager {
-		bnbAmountToSwap = _bnbAmount;
-		emit SetBnbAmountToSwap(bnbAmountToSwap);
+	function setNativeAmountToSwap(uint256 _bnbAmount) public onlyManager {
+		nativeAmountToSwap = _bnbAmount;
+		emit SetNativeAmountToSwap(nativeAmountToSwap);
 	}
 
 	function updateMarketingWallet(address newMarketingWallet) public onlyManager {
@@ -353,7 +353,7 @@ contract SphynxToken is BEP20, Manageable {
 		path[0] = sphynxSwapRouter.WETH();
 		path[1] = address(this);
 
-		uint256[] memory amounts = sphynxSwapRouter.getAmountsOut(bnbAmountToSwap, path);
+		uint256[] memory amounts = sphynxSwapRouter.getAmountsOut(nativeAmountToSwap, path);
 		tokenAmount = amounts[1];
 		return tokenAmount;
 	}
