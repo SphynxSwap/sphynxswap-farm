@@ -29,7 +29,23 @@ module.exports = {
             enabled: true,
           },
         },
-      }
+      },
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+          },
+        },
+      },
+      {
+        version: "0.7.5",
+        settings: {
+          optimizer: {
+            enabled: true,
+          },
+        },
+      },
     ],
   },
   networks: {
