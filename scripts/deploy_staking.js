@@ -18,45 +18,42 @@ async function main() {
 
     console.log('authority address = : ' + authority.address);
     
-    const OHM = await ethers.getContractFactory('SphynxERC20Token');
-    const ohm = await OHM.deploy(authority.address);
+    const SPH = await ethers.getContractFactory('SphynxERC20Token');
+    const sph = await SPH.deploy(authority.address);
 
-    console.log('ohm address = : ' + ohm.address);
+    console.log('sphynx address = : ' + sph.address);
 
     const SphynxTreasury = await ethers.getContractFactory('SphynxTreasury');
-    const olympusTreasury = await SphynxTreasury.deploy(ohm.address, '0', authority.address);
-    console.log('olympusTreasury address = : ' + olympusTreasury.address);
+    const sphynxTreasury = await SphynxTreasury.deploy(sph.address, '0', authority.address);
+    console.log('sphynx Treasury address = : ' + sphynxTreasury.address);
 
-    const SOHM = await ethers.getContractFactory('sSphynx');
-    const sOHM = await SOHM.deploy();
+    const BondDepository = await ethers.getContractFactory('SphynxBondDepository');
+    const bondDepository = await BondDepository.deploy(sph.address, sphynxTreasury.address, authority.address);
+    console.log('bondDepository address = : ' + bondDepository.address);
 
-    console.log('sOHM address = : ' + sOHM.address);
+    const SSPH = await ethers.getContractFactory('sSphynx');
+    const sSPH = await SSPH.deploy();
 
-    const GOHM = await ethers.getContractFactory("gOHM");
-    const gOHM = await GOHM.deploy(sOHM.address);
+    console.log('sSPH address = : ' + sSPH.address);
 
-    console.log('gOHM address = : ' + gOHM.address);
+    const GSPH = await ethers.getContractFactory("gSPH");
+    const gSPH = await GSPH.deploy(sSPH.address);
+
+    console.log('gSPH address = : ' + gSPH.address);
 
 
     const SphynxStaking = await ethers.getContractFactory('SphynxStaking');
-    const staking = await SphynxStaking.deploy(ohm.address, sOHM.address, gOHM.address, '2200', firstEpochNumber, firstBlockNumber, authority.address);
+    const staking = await SphynxStaking.deploy(sph.address, sSPH.address, gSPH.address, '2200', firstEpochNumber, firstBlockNumber, authority.address);
     console.log('staking address = : ' + staking.address);
 
     const Distributor = await ethers.getContractFactory('Distributor');
-    const distributor = await Distributor.deploy(olympusTreasury.address, ohm.address, staking.address, authority.address );
+    const distributor = await Distributor.deploy(sphynxTreasury.address, sph.address, staking.address, authority.address );
     console.log('distributor address = : ' + distributor.address);
 
     await sOHM.setIndex('7675210820');
-    console.log('distributor address = : ' + distributor.address);
-    await sOHM.setgOHM(gOHM.address);
-    console.log('distributor address = : ' + distributor.address);
-    await sOHM.initialize(staking.address, olympusTreasury.address);
-    console.log('distributor address = : ' + distributor.address);
-    console.log("OHM: " + ohm.address);
-    console.log("Sphynx Treasury: " + olympusTreasury.address);
-    console.log("Staked Sphynx: " + sOHM.address);
-    console.log("Staking Contract: " + staking.address);
-    console.log("Distributor: " + distributor.address);
+    await sOHM.setgSPH(gSPH.address);
+    await sOHM.initialize(staking.address, sphynxTreasury.address);
+    
 }
 
 main()
