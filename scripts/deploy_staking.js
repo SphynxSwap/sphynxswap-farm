@@ -31,6 +31,10 @@ async function main() {
     const bondDepository = await BondDepository.deploy(sph.address, sphynxTreasury.address, authority.address);
     console.log('bondDepository address = : ' + bondDepository.address);
 
+    const SphynxCalculator = await ethers.getContractFactory('SphynxBondingCalculator');
+    const sphynxCalculator = await SphynxCalculator.deploy(sph.address);
+    console.log('sphynxCalculator address = : ' + sphynxCalculator.address);
+
     const SSPH = await ethers.getContractFactory('sSphynx');
     const sSPH = await SSPH.deploy();
 
@@ -41,7 +45,6 @@ async function main() {
 
     console.log('gSPH address = : ' + gSPH.address);
 
-
     const SphynxStaking = await ethers.getContractFactory('SphynxStaking');
     const staking = await SphynxStaking.deploy(sph.address, sSPH.address, gSPH.address, '2200', firstEpochNumber, firstBlockNumber, authority.address);
     console.log('staking address = : ' + staking.address);
@@ -50,6 +53,13 @@ async function main() {
     const distributor = await Distributor.deploy(sphynxTreasury.address, sph.address, staking.address, authority.address );
     console.log('distributor address = : ' + distributor.address);
 
+    const BondTeller = await ethers.getContractFactory("BondTeller");
+    const bondTeller = await BondTeller.deploy(bondDepository.address, staking.address, sphynxTreasury.address, sph.address,
+        sSPH.address, authority.address);
+    await bondTeller.deployed();
+    console.log("bondTeller deployed to:", bondTeller.address);
+
+  
     await sOHM.setIndex('7675210820');
     await sOHM.setgSPH(gSPH.address);
     await sOHM.initialize(staking.address, sphynxTreasury.address);
