@@ -58,12 +58,41 @@ async function main() {
         sSPH.address, authority.address);
     await bondTeller.deployed();
     console.log("bondTeller deployed to:", bondTeller.address);
+    // Set staking and sOhm contract as trusted
 
   
-    await sOHM.setIndex('7675210820');
-    await sOHM.setgSPH(gSPH.address);
-    await sOHM.initialize(staking.address, sphynxTreasury.address);
-    
+    await sSPH.setIndex('7675210820');
+    await sSPH.setgSPH(gSPH.address);
+    await sSPH.initialize(staking.address, sphynxTreasury.address);
+ 
+    //  Does this need to happen?
+    //await gOhm.migrate(staking.address, sOhm.address);
+
+    // // Initialize sOHM and set the index
+    // await sOhm.setIndex(INITIAL_INDEX); // TODO
+    // await sOhm.setgOHM(gOhm.address);
+    // await sOhm.initialize(staking.address, treasuryDeployment.address);
+
+    // // TODO: different than deployAll.js (uses initialIndex instead of 0)
+    // // doing this because the sohm contract has a require(index == 0)
+    // // TODO: this is leading to a revert
+    // // await sohmContract.setIndex(0);
+
+    // await staking.setDistributor(distributor.address);
+
+    // // Add staking contract a`s distributor recipient
+    // await distributor.addRecipient(staking.address, INITIAL_REWARD_RATE);
+
+    // // Approve staking contact to spend deployer's OHM
+    // await ohm.approve(staking.address, LARGE_APPROVAL);
+
+    // // Do we do this in a different way?
+    // // queue and toggle reward manager
+    // await treasury.queueTimelock("8", distributor.address, deployer);
+    // // queue and toggle deployer reserve depositor
+    // await treasury.queueTimelock("0", deployer, deployer);
+    // // queue and toggle liquidity depositor
+    // await treasury.queueTimelock("4", deployer, deployer);
 }
 
 main()

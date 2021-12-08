@@ -1,4 +1,4 @@
 //sph token address
 module.exports = [
-    '0x24e6ef077cBf5ac89b92f77b1A19367F501e5092'
+    '0x1E68284eE024C2AA952FA6dc62C6CbB997E899Bb'
 ];

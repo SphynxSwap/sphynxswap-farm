@@ -1,4 +1,4 @@
 //authority address
 module.exports = [
-    '0xa950DF7e2109744d84fF53535b8B1e47E2807644'
+    '0xaBA45c600fCd2E53014aF28ADC93c0690d93060e'
 ];

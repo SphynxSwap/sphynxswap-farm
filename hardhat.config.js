@@ -73,7 +73,7 @@ module.exports = {
       accounts: [`0x${PRIVATE_KEY}`],
     },
     bsctest: {
-      url: `https://speedy-nodes-nyc.moralis.io/fbb4b2b82993bf507eaaab13/bsc/testnet/archive`,
+      url: `https://speedy-nodes-nyc.moralis.io/fbb4b2b82993bf507eaaab13/bsc/testnet`,
       accounts: [`0x${PRIVATE_KEY}`],
     },
   },
