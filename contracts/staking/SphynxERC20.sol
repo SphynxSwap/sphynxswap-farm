@@ -14,7 +14,7 @@ contract SphynxERC20Token is ERC20Permit, ISPH, SphynxAccessControlled {
     using SafeMath for uint256;
 
     constructor(address _authority) 
-    ERC20("Sphynx", "SPH", 9) 
+    ERC20("Sphynx", "SPH", 18) 
     ERC20Permit("Sphynx") 
     SphynxAccessControlled(ISphynxAuthority(_authority)) {}
 

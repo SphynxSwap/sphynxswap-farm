@@ -204,7 +204,7 @@ contract SphynxTokenMigrator is SphynxAccessControlled {
             oldSupply -= balance;
         }
 
-        uint256 amountToWithdraw = balance.mul(1e9);
+        uint256 amountToWithdraw = balance.mul(1e18);
         oldSPH.approve(address(oldTreasury), amountToWithdraw);
         oldTreasury.withdraw(amountToWithdraw, reserve);
         IERC20(reserve).safeTransfer(address(newTreasury), IERC20(reserve).balanceOf(address(this)));

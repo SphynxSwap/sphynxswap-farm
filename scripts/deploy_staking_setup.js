@@ -6,7 +6,7 @@ async function main() {
     console.log('Deploying contracts with the account: ' + deployer.address);
 
     const firstEpochNumber = "550";
-    const firstBlockNumber = "9505000";
+    const firstBlockNumber = "14987521";
     
     const Authority = await ethers.getContractFactory("SphynxAuthority");
     const authority = await Authority.deploy(

@@ -225,7 +225,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
     require(payout >= 10000000, "Bond too small"); // must be > 0.01 SPH ( underflow protection )
     require(payout <= maxPayout(_BID), "Bond too large"); // size protection because there is no slippage
 
-    info.principal.safeTransfer(address(treasury), _amount); // send payout to treasury
+    info.principal.safeTransferFrom(address(msg.sender), address(treasury), _amount); // send payout to treasury
 
     bonds[_BID].totalDebt = info.totalDebt.add(value); // increase total debt
 
@@ -392,7 +392,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
    * @return debtRatio_ uint
    */
   function debtRatio(uint256 _BID) public view returns (uint256 debtRatio_) {
-    debtRatio_ = FixedPoint.fraction(currentDebt(_BID).mul(1e9), SPH.totalSupply()).decode112with18().div(1e18);
+    debtRatio_ = FixedPoint.fraction(currentDebt(_BID).mul(1e18), SPH.totalSupply()).decode112with18().div(1e18);
   }
 
   /**
@@ -402,7 +402,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
   function standardizedDebtRatio(uint256 _BID) public view returns (uint256) {
     Bond memory bond = bonds[_BID];
     if (address(bond.calculator) != address(0)) {
-      return debtRatio(_BID).mul(bond.calculator.markdown(address(bond.principal))).div(1e9);
+      return debtRatio(_BID).mul(bond.calculator.markdown(address(bond.principal))).div(1e18);
     } else {
       return debtRatio(_BID);
     }

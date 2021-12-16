@@ -12,10 +12,13 @@ async function main() {
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
-
+  
   // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("SphynxVault");
-  const greeter = await Greeter.deploy("0xd38ec16caf3464ca04929e847e4550dcff25b27a", "0xd38ec16caf3464ca04929e847e4550dcff25b27a", "0x39dDE712D0B08C3Ce11AF7bd5b6E2ef9A495D3Be", "0x627a91E56434801B695F46DB4c1140567aF990C5", "0x074222A8A5b6A155A80C533A54E3ef5ED267AE16");
+  const Greeter = await hre.ethers.getContractFactory("BondTeller");
+  const greeter = await Greeter.deploy("0x3c043dBE0DE433ccA054a9841A7e17872A75431F", 
+    "0x3032d38a2Cd7cfCBfC41B87068C9aC08fC977B78", "0xc81B31262Fb649809BCacb4457997FA4DBae9e84", 
+    "0xDB47E4AD8d842e6A32f6e6FD0b278AeEEfD67cC6", "0xA0A2F566E950c2e0c3B90e83B95A7319590eCd5E",
+    "0x239BE60B9e0F48EE5a12Ba3145A58381FCF64000");
 
   await greeter.deployed();
 

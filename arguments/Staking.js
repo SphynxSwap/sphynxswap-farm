@@ -1,11 +1,11 @@
 //sphynx.address, sSPH.address, gSPH.address, '2200', firstEpochNumber, firstBlockNumber, authority.address
 
 module.exports = [
-    '0x1E68284eE024C2AA952FA6dc62C6CbB997E899Bb',
-    '0xE10aB214b65Efd00774bdEaBA1215d944b696D10',
-    '0xd565aFad971B123FfC3C8E14cC45590EFFBe2476',
+    '0xfe1Daad595f725a3E258893385471418bcD6659C',
+    '0xb19E5e9712ce12B036E65669B7Ee6fc1e268BBb3',
+    '0x23ee28421991effBEBC622988c9Df963ba776d0f',
     '2200',
     '550',
-    '9505000',
-    '0xaBA45c600fCd2E53014aF28ADC93c0690d93060e'
+    '14987521',
+    '0x7Db62157fc2170432e1A51aF46030E47076e5261'
 ];

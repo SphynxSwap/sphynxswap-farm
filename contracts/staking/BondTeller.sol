@@ -255,6 +255,6 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         uint256 timeSince = block.timestamp.sub(bond.created);
         uint256 term = bond.vested.sub(bond.created);
 
-        percentVested_ = timeSince.mul(1e9).div(term);
+        percentVested_ = timeSince.mul(1e18).div(term);
     }
 }

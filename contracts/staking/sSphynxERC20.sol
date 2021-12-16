@@ -71,7 +71,7 @@ contract sSphynx is IsSPH, ERC20Permit {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor() ERC20("Staked SPH", "sSPH", 9) ERC20Permit("Staked SPH") {
+    constructor() ERC20("Staked SPH", "sSPH", 18) ERC20Permit("Staked SPH") {
         initializer = msg.sender;
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
