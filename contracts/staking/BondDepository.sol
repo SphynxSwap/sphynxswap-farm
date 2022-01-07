@@ -22,7 +22,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
   /* ======== EVENTS ======== */
 
   event beforeBond(uint256 index, uint256 price, uint256 internalPrice, uint256 debtRatio);
-  event CreateBond(uint256 index, uint256 amount, uint256 payout, uint256 expires);
+  event CreateBond(uint256 index, uint256 amount, uint256 payout, uint256 expires, uint256 id);
   event afterBond(uint256 index, uint256 price, uint256 internalPrice, uint256 debtRatio);
 
   /* ======== STRUCTS ======== */
@@ -48,7 +48,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
     uint256 conclusion; // block number bond no longer offered
     uint256 minimumPrice; // vs principal value
     uint256 maxPayout; // in thousandths of a %. i.e. 500 = 0.5%
-    uint256 maxDebt; // 9 decimal debt ratio, max % total supply created as debt
+    uint256 maxDebt; // 18 decimal debt ratio, max % total supply created as debt
   }
 
   /* ======== STATE VARIABLES ======== */
@@ -214,11 +214,11 @@ contract SphynxBondDepository is SphynxAccessControlled {
     // ensure there is remaining capacity for bond
     if (info.capacityIsPayout) {
       // capacity in payout terms
-      require(info.capacity >= payout, "Bond concluded");
+      require(info.capacity >= payout, "Bond capacity is low. Bond concluded");
       info.capacity = info.capacity.sub(payout);
     } else {
       // capacity in principal terms
-      require(info.capacity >= _amount, "Bond concluded");
+      require(info.capacity >= _amount, "Bond capacity is low. Bond concluded");
       info.capacity = info.capacity.sub(_amount);
     }
 
@@ -237,7 +237,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
     // user info stored with teller
     uint256 index = teller.newBond(_depositor, address(info.principal), _amount, payout, expiration, _feo);
 
-    emit CreateBond(_BID, _amount, payout, expiration);
+    emit CreateBond(_BID, _amount, payout, expiration, index);
 
     return (payout, index);
   }
@@ -299,7 +299,8 @@ contract SphynxBondDepository is SphynxAccessControlled {
       uint256 vestingTerm_,
       uint256 minimumPrice_,
       uint256 maxPayout_,
-      uint256 maxDebt_
+      uint256 maxDebt_,
+      uint256 conclusion_
     )
   {
     Terms memory terms = bonds[_BID].terms;
@@ -308,6 +309,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
     minimumPrice_ = terms.minimumPrice;
     maxPayout_ = terms.maxPayout;
     maxDebt_ = terms.maxDebt;
+    conclusion_ = terms.conclusion;
   }
 
   // PAYOUT
@@ -349,7 +351,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
    * @return price_ uint
    */
   function bondPrice(uint256 _BID) public view returns (uint256 price_) {
-    price_ = bonds[_BID].terms.controlVariable.mul(debtRatio(_BID)).add(1000000000).div(1e7);
+    price_ = bonds[_BID].terms.controlVariable.mul(debtRatio(_BID)).add(1000000000000000000).div(1e16);
     if (price_ < bonds[_BID].terms.minimumPrice) {
       price_ = bonds[_BID].terms.minimumPrice;
     }
@@ -362,7 +364,7 @@ contract SphynxBondDepository is SphynxAccessControlled {
    */
   function _bondPrice(uint256 _BID) internal returns (uint256 price_) {
     Bond memory info = bonds[_BID];
-    price_ = info.terms.controlVariable.mul(debtRatio(_BID)).add(1000000000).div(1e7);
+    price_ = info.terms.controlVariable.mul(debtRatio(_BID)).add(1000000000000000000).div(1e16);
     if (price_ < info.terms.minimumPrice) {
       price_ = info.terms.minimumPrice;
     } else if (info.terms.minimumPrice != 0) {
