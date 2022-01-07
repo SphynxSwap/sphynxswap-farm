@@ -184,15 +184,13 @@ contract SphynxBondDepository is SphynxAccessControlled {
    * @param _maxPrice uint
    * @param _depositor address
    * @param _BID uint
-   * @param _feo address
    * @return uint
    */
   function deposit(
     uint256 _amount,
     uint256 _maxPrice,
     address _depositor,
-    uint256 _BID,
-    address _feo
+    uint256 _BID
   ) external returns (uint256, uint256) {
     require(_depositor != address(0), "Invalid address");
 
@@ -229,13 +227,10 @@ contract SphynxBondDepository is SphynxAccessControlled {
 
     bonds[_BID].totalDebt = info.totalDebt.add(value); // increase total debt
 
-    uint256 expiration = info.terms.vestingTerm.add(block.number);
-    if (!info.terms.fixedTerm) {
-      expiration = info.terms.expiration;
-    }
+    uint256 expiration = info.terms.vestingTerm;
 
     // user info stored with teller
-    uint256 index = teller.newBond(_depositor, address(info.principal), _amount, payout, expiration, _feo);
+    uint256 index = teller.newBond(_depositor, address(info.principal), _amount, payout, expiration, _BID);
 
     emit CreateBond(_BID, _amount, payout, expiration, index);
 

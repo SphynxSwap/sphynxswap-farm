@@ -52,7 +52,7 @@ contract BondTeller is ITeller, SphynxAccessControlled {
     IERC20 internal immutable SPH;
     IsSPH internal immutable sSPH; // payment token
 
-    mapping(address => Bond[]) public bonderInfo; // user data
+    mapping(address => mapping(uint256 => Bond)) public bonderInfo; // user data
     mapping(address => uint256[]) public indexesFor; // user bond indexes
 
     mapping(address => uint256) public FERs; // front end operator rewards
@@ -89,7 +89,7 @@ contract BondTeller is ITeller, SphynxAccessControlled {
      * @param _principalPaid uint256
      * @param _payout uint256
      * @param _expires uint256
-     * @param _feo address
+     * @param _BID uint256
      * @return index_ uint256
      */
     function newBond(
@@ -98,7 +98,7 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         uint256 _principalPaid,
         uint256 _payout,
         uint256 _expires,
-        address _feo
+        uint256 _BID
     ) external override onlyDepository returns (uint256 index_) {
         uint256 reward = _payout.mul(feReward).div(10_000);
         treasury.mint(address(this), _payout.add(reward));
@@ -106,58 +106,17 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         SPH.approve(address(staking), _payout);
         staking.stake(address(this), _payout, true, true);
 
-        FERs[_feo] = FERs[_feo].add(reward); // front end operator reward
-
-        index_ = bonderInfo[_bonder].length;
-
-        // store bond & stake payout
-        bonderInfo[_bonder].push(
-            Bond({
-                principal: _principal,
-                principalPaid: _principalPaid,
-                payout: sSPH.toG(_payout),
-                vested: _expires,
-                created: block.timestamp,
-                redeemed: 0
-            })
-        );
-    }
-
-    /* ========== INTERACTABLE FUNCTIONS ========== */
-
-    /**
-     *  @notice redeems all redeemable bonds
-     *  @param _bonder address
-     *  @return uint256
-     */
-    function redeemAll(address _bonder) external override returns (uint256) {
-        updateIndexesFor(_bonder);
-        return redeem(_bonder, indexesFor[_bonder]);
-    }
-
-    /**
-     *  @notice redeem bond for user
-     *  @param _bonder address
-     *  @param _indexes calldata uint256[]
-     *  @return uint256
-     */
-    function redeem(address _bonder, uint256[] memory _indexes) public override returns (uint256) {
-        uint256 dues;
-        for (uint256 i = 0; i < _indexes.length; i++) {
-            Bond memory info = bonderInfo[_bonder][_indexes[i]];
-
-            if (pendingFor(_bonder, _indexes[i]) != 0) {
-                bonderInfo[_bonder][_indexes[i]].redeemed = block.timestamp; // mark as redeemed
-
-                dues = dues.add(info.payout);
-            }
-        }
-
-        dues = sSPH.fromG(dues);
-
-        emit Redeemed(_bonder, dues);
-        pay(_bonder, dues);
-        return dues;
+        FERs[_bonder] = FERs[_bonder].add(reward); // front end operator reward
+        
+        bonderInfo[_bonder][_BID] = Bond({
+            principal: _principal,
+            principalPaid: _principalPaid,
+            created: block.number,
+            vested: _expires,
+            payout: sSPH.toG(_payout).add(sSPH.toG(bonderInfo[_bonder][_BID].payout)),
+            redeemed: 0
+        });
+        index_ = 0;
     }
 
     // pay reward to front end operator
@@ -166,6 +125,46 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         FERs[msg.sender] = 0;
         SPH.safeTransfer(msg.sender, reward);
     }
+
+    /**
+     *  @notice redeem bond for user
+     *  @param _bonder address
+     *  @param BID_ calldata uint256
+     *  @return dues uint256
+     */
+    function redeem(address _bonder, uint256 BID_) public override returns (uint256 dues) {
+        Bond memory info = bonderInfo[ _bonder ][BID_];
+        uint percentVested = percentVestedFor( _bonder, BID_ ); // (blocks since last interaction / vesting term remaining)
+        uint256 reward = FERs[msg.sender];
+
+        if ( percentVested >= 10000 ) { // if fully vested
+            delete bonderInfo[ _bonder ][BID_]; // delete user info
+            dues = sSPH.fromG(info.payout);
+            pay(_bonder, dues);
+            FERs[msg.sender] = 0;
+            SPH.safeTransfer(msg.sender, reward);   
+            emit Redeemed(_bonder, dues);
+
+        } else { // if unfinished
+            // calculate payout vested
+            uint payout = info.payout.mul( percentVested ).div( 10000 );
+            // store updated deposit info
+            bonderInfo[ _bonder ][BID_] = Bond({
+                principal: bonderInfo[ _bonder ][BID_].principal,
+                payout: info.payout.sub( payout ),
+                vested: info.vested.sub( block.number.sub( info.created ) ),
+                created: block.number,
+                principalPaid: bonderInfo[ _bonder ][BID_].principalPaid,
+                redeemed: 0
+            });
+            dues = sSPH.fromG(payout);
+            pay(_bonder, dues);
+            emit Redeemed(_bonder, dues);
+        }
+        return dues;
+    }
+
+    
 
     /* ========== OWNABLE FUNCTIONS ========== */
 
@@ -184,77 +183,38 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         sSPH.safeTransfer(_bonder, _amount);
     }
 
-    /* ========== VIEW FUNCTIONS ========== */
-
-    /**
-     *  @notice returns indexes of live bonds
-     *  @param _bonder address
+    
+     /**
+     *  @notice calculate amount of OHM available for claim by depositor
+     *  @param _depositor address
+     *  @return pendingPayout_ uint
      */
-    function updateIndexesFor(address _bonder) public override {
-        Bond[] memory info = bonderInfo[_bonder];
-        delete indexesFor[_bonder];
-        for (uint256 i = 0; i < info.length; i++) {
-            if (info[i].redeemed == 0) {
-                indexesFor[_bonder].push(i);
-            }
+    function pendingPayoutFor( address _depositor, uint256 _BID ) external override view returns ( uint pendingPayout_ ) {
+        uint percentVested = percentVestedFor( _depositor, _BID);
+        uint payout = bonderInfo[ _depositor ][_BID].payout;
+
+        if ( percentVested >= 10000 ) {
+            pendingPayout_ = payout;
+        } else {
+            pendingPayout_ = payout.mul( percentVested ).div( 10000 );
         }
     }
-
-    // PAYOUT
-
-    /**
-     * @notice calculate amount of SPH available for claim for single bond
-     * @param _bonder address
-     * @param _index uint256
-     * @return uint256
-     */
-    function pendingFor(address _bonder, uint256 _index) public view override returns (uint256) {
-        if (bonderInfo[_bonder][_index].redeemed == 0 && bonderInfo[_bonder][_index].vested <= block.number) {
-            return bonderInfo[_bonder][_index].payout;
-        }
-        return 0;
-    }
-
-    /**
-     * @notice calculate amount of SPH available for claim for array of bonds
-     * @param _bonder address
-     * @param _indexes uint256[]
-     * @return pending_ uint256
-     */
-    function pendingForIndexes(address _bonder, uint256[] memory _indexes) public view override returns (uint256 pending_) {
-        for (uint256 i = 0; i < _indexes.length; i++) {
-            pending_ = pending_.add(pendingFor(_bonder, i));
-        }
-        pending_ = sSPH.fromG(pending_);
-    }
-
-    /**
-     *  @notice total pending on all bonds for bonder
-     *  @param _bonder address
-     *  @return pending_ uint256
-     */
-    function totalPendingFor(address _bonder) public view override returns (uint256 pending_) {
-        Bond[] memory info = bonderInfo[_bonder];
-        for (uint256 i = 0; i < info.length; i++) {
-            pending_ = pending_.add(pendingFor(_bonder, i));
-        }
-        pending_ = sSPH.fromG(pending_);
-    }
-
-    // VESTING
-
     /**
      * @notice calculate how far into vesting a depositor is
      * @param _bonder address
-     * @param _index uint256
+     * @param _BID uint256
      * @return percentVested_ uint256
      */
-    function percentVestedFor(address _bonder, uint256 _index) public view override returns (uint256 percentVested_) {
-        Bond memory bond = bonderInfo[_bonder][_index];
+    function percentVestedFor(address _bonder, uint256 _BID) public view override returns (uint256 percentVested_) {
 
-        uint256 timeSince = block.timestamp.sub(bond.created);
-        uint256 term = bond.vested.sub(bond.created);
+        Bond memory bond = bonderInfo[ _bonder ][_BID] ;
+        uint blocksSinceLast = block.number.sub( bond.created );
+        uint vesting = bond.vested;
 
-        percentVested_ = timeSince.mul(1e18).div(term);
+        if ( vesting > 0 ) {
+            percentVested_ = blocksSinceLast.mul( 10000 ).div( vesting );
+        } else {
+            percentVested_ = 0;
+        }
     }
 }
