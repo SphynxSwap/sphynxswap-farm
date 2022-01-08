@@ -194,9 +194,9 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         uint payout = bonderInfo[ _depositor ][_BID].payout;
 
         if ( percentVested >= 10000 ) {
-            pendingPayout_ = payout;
+            pendingPayout_ = sSPH.fromG(payout);
         } else {
-            pendingPayout_ = payout.mul( percentVested ).div( 10000 );
+            pendingPayout_ = sSPH.fromG(payout.mul( percentVested ).div( 10000 ));
         }
     }
     /**
@@ -216,5 +216,15 @@ contract BondTeller is ITeller, SphynxAccessControlled {
         } else {
             percentVested_ = 0;
         }
+    }
+
+     /**
+     *  @notice calculate amount of OHM available for claim by depositor
+     *  @param _depositor address
+     *  @return totalPayout_ uint
+     */
+    function totalPayout( address _depositor, uint256 _BID ) external view returns ( uint totalPayout_ ) {
+        uint payout = bonderInfo[ _depositor ][_BID].payout;
+        totalPayout_ = sSPH.fromG(payout);
     }
 }

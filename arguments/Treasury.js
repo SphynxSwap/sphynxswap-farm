@@ -2,7 +2,7 @@
 //time lock
 //authority address
 module.exports = [
-    '0xA8D65B4F74217f7D632CC2A4289b79aC2c7C5dcb',
+    '0x5A274f8DD2aA0419EAe2107a8aC841B1dcc354bF',
     '0',
-    '0x675D149afdc2761D73958dbDD47Dce0731C29Ca1'
+    '0x141c59D99e6c04039D82815d8109106Dcde603BC'
 ];
