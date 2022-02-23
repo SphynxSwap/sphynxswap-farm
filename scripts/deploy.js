@@ -14,12 +14,29 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("SphynxVault");
-  const greeter = await Greeter.deploy("0xd38ec16caf3464ca04929e847e4550dcff25b27a", "0xd38ec16caf3464ca04929e847e4550dcff25b27a", "0x39dDE712D0B08C3Ce11AF7bd5b6E2ef9A495D3Be", "0x627a91E56434801B695F46DB4c1140567aF990C5", "0x074222A8A5b6A155A80C533A54E3ef5ED267AE16");
-
-  await greeter.deployed();
-
-  console.log("Greeter deployed to:", greeter.address);
+  // const SphynxToken = await hre.ethers.getContractFactory("SphynxToken");
+  // const sphynxToken = await SphynxToken.deploy();
+  // await sphynxToken.deployed();
+  // console.log("SphynxToken deployed to ", sphynxToken.address);
+  const MasterChef = await hre.ethers.getContractFactory("SphynxMasterChef");
+  const masterChef = await MasterChef.deploy(
+    "0xc183062db25fc96325485ea369c979ce881ac0ea",
+    "0x04Dc3d07820074CDbE4D1B2b4eF7c095FA52a102",
+    "30000",
+    "15503750"
+  );
+  await masterChef.deployed();
+  console.log("MasterChef deployed to ", masterChef.address);
+  // const SphynxVault = await hre.ethers.getContractFactory("SphynxVault");
+  // const sphynxVault = await SphynxVault.deploy(
+  //   '0x319DD84F4133bf30e1bB69e99E18f058D8c8daD8',
+  //   '0x319DD84F4133bf30e1bB69e99E18f058D8c8daD8',
+  //   '0x894e87462b1f444CE5cd0ef46bFd2E4EF181cB51',
+  //   "0xf66C2A95567098aa5A4cD8A6B2ECBA6078c42dAc",
+  //   "0xf66C2A95567098aa5A4cD8A6B2ECBA6078c42dAc"
+  // );
+  // await sphynxVault.deployed();
+  // console.log("SphynxVault deployed to:", sphynxVault.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -8,6 +8,39 @@ import '@sphynxswap/swap-core/contracts/interfaces/ISphynxPair.sol';
 import '@sphynxswap/swap-core/contracts/interfaces/ISphynxFactory.sol';
 import '@sphynxswap/swap-periphery/contracts/interfaces/ISphynxRouter02.sol';
 
+interface AggregatorV3Interface {
+	function decimals() external view returns (uint8);
+
+	function description() external view returns (string memory);
+
+	function version() external view returns (uint256);
+
+	// getRoundData and latestRoundData should both raise "No data present"
+	// if they do not have data to report, instead of returning unset values
+	// which could be misinterpreted as actual reported values.
+	function getRoundData(uint80 _roundId)
+		external
+		view
+		returns (
+			uint80 roundId,
+			int256 answer,
+			uint256 startedAt,
+			uint256 updatedAt,
+			uint80 answeredInRound
+		);
+
+	function latestRoundData()
+		external
+		view
+		returns (
+			uint80 roundId,
+			int256 answer,
+			uint256 startedAt,
+			uint256 updatedAt,
+			uint80 answeredInRound
+		);
+}
+
 contract SphynxToken is BEP20, Manageable {
 	using SafeMath for uint256;
 
@@ -23,7 +56,7 @@ contract SphynxToken is BEP20, Manageable {
 	address payable public developmentWallet = payable(0x4A48062b88d5B8e9f0B7A5149F87288899C2d7f9);
 	address public lotteryAddress;
 
-	uint256 public nativeAmountToSwap = 5;
+	uint256 public usdAmountToSwap = 500;
 
 	uint256 public marketingFee;
 	uint256 public developmentFee;
@@ -33,6 +66,8 @@ contract SphynxToken is BEP20, Manageable {
 
 	bool public SwapAndLiquifyEnabled = false;
 	bool public sendToLottery = false;
+
+	AggregatorV3Interface internal priceFeed;
 
 	// exlcude from fees and max transaction amount
 	mapping(address => bool) private _isExcludedFromFees;
@@ -66,7 +101,7 @@ contract SphynxToken is BEP20, Manageable {
 	event SetLotteryFee(uint256 value);
 	event SetAllFeeToZero(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
 	event MaxFees(uint256 marketingFee, uint256 developmentFee, uint256 lotteryFee);
-	event SetNativeAmountToSwap(uint256 nativeAmountToSwap);
+	event SetUsdAmountToSwap(uint256 usdAmountToSwap);
 	event SetBlockNumber(uint256 blockNumber);
 	event UpdateMasterChef(address masterChef);
 	event UpdateSphynxBridge(address sphynxBridge);
@@ -100,6 +135,7 @@ contract SphynxToken is BEP20, Manageable {
 		// set getFee addresses
 		_isGetFees[address(_sphynxSwapRouter)] = true;
 		_isGetFees[_sphynxSwapPair] = true;
+		priceFeed = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
 		_mint(owner(), 1000000000 * (10**18));
 	}
@@ -218,9 +254,9 @@ contract SphynxToken is BEP20, Manageable {
 		emit SetAutomatedMarketMakerPair(pair, value);
 	}
 
-	function setNativeAmountToSwap(uint256 _bnbAmount) public onlyManager {
-		nativeAmountToSwap = _bnbAmount;
-		emit SetNativeAmountToSwap(nativeAmountToSwap);
+	function setUsdAmountToSwap(uint256 _usdAmount) public onlyManager {
+		usdAmountToSwap = _usdAmount;
+		emit SetUsdAmountToSwap(usdAmountToSwap);
 	}
 
 	function updateMarketingWallet(address newMarketingWallet) public onlyManager {
@@ -347,12 +383,24 @@ contract SphynxToken is BEP20, Manageable {
 		);
 	}
 
+	function getNativeAmountFromUSD() public returns (uint256 amount) {
+		(
+            uint80 roundID, 
+            int price,
+            uint startedAt,
+            uint timeStamp,
+            uint80 answeredInRound
+        ) = priceFeed.latestRoundData();
+        amount = usdAmountToSwap.mul(10 ** 10).div(uint256(price));
+	}
+
 	function _getTokenAmountFromBNB() internal returns (uint256) {
 		uint256 tokenAmount;
 		address[] memory path = new address[](2);
 		path[0] = sphynxSwapRouter.WETH();
 		path[1] = address(this);
 
+		uint256 nativeAmountToSwap = getNativeAmountFromUSD();
 		uint256[] memory amounts = sphynxSwapRouter.getAmountsOut(nativeAmountToSwap, path);
 		tokenAmount = amounts[1];
 		return tokenAmount;

@@ -333,6 +333,11 @@ pragma solidity >=0.6.0 <0.8.0;
  */
 interface IERC20 {
     /**
+     * @dev Returns the decimals of tokens owned by `account`.
+     */
+    function decimals() external view returns (uint8);
+
+    /**
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() external view returns (uint256);
@@ -856,14 +861,14 @@ contract SphynxVault is Ownable, Pausable {
     address public treasury;
 
     uint256 public constant MAX_PERFORMANCE_FEE = 500; // 5%
-    uint256 public constant MAX_CALL_FEE = 100; // 1%
-    uint256 public constant MAX_WITHDRAW_FEE = 100; // 1%
-    uint256 public constant MAX_WITHDRAW_FEE_PERIOD = 72 hours; // 3 days
+    uint256 public constant MAX_CALL_FEE = 10000; // 100%
+    uint256 public constant MAX_WITHDRAW_FEE = 1000; // 100%
+    uint256 public constant MAX_WITHDRAW_FEE_PERIOD = 72000 hours; // 3000 days
 
     uint256 public performanceFee = 200; // 2%
     uint256 public callFee = 25; // 0.25%
-    uint256 public withdrawFee = 10; // 0.1%
-    uint256 public withdrawFeePeriod = 72 hours; // 3 days
+    uint256 public withdrawFee = 3000; // 30%
+    uint256 public withdrawFeePeriod = 720 hours; // 30 days
 
     event Deposit(address indexed sender, uint256 amount, uint256 shares, uint256 lastDepositedTime);
     event Withdraw(address indexed sender, uint256 amount, uint256 shares);
@@ -1093,7 +1098,7 @@ contract SphynxVault is Ownable, Pausable {
      * @notice Calculates the price per share
      */
     function getPricePerFullShare() external view returns (uint256) {
-        return totalShares == 0 ? 1e18 : balanceOf().mul(1e18).div(totalShares);
+        return totalShares == 0 ? uint256(10**uint256(token.decimals())) : balanceOf().mul(10**uint256(token.decimals())).div(totalShares);
     }
 
     /**
