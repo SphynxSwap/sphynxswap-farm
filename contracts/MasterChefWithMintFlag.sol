@@ -45,6 +45,10 @@ contract SphynxMasterChef is Ownable {
 	uint256 public sphynxPerBlock;
 	// Bonus muliplier for early sphynx makers.
 	uint256 public BONUS_MULTIPLIER = 1;
+	// Auto Vault Address
+	address public autoVault;
+	// Only Auto Vault Flag
+	bool public onlyAutoVault;
 
 	uint256 public toBurn = 20;
 	bool public isMint;
@@ -85,6 +89,14 @@ contract SphynxMasterChef is Ownable {
 		stakedTokens = 0;
 	}
 
+	function updateAutoVault(address _vault) external onlyOwner {
+		autoVault = _vault;
+	}
+
+	function updateOnlyAutoVault(bool _value) external onlyOwner {
+		onlyAutoVault = _value;
+	}
+
 	function updateMultiplier(uint256 multiplierNumber) public onlyOwner {
 		BONUS_MULTIPLIER = multiplierNumber;
 	}
@@ -96,6 +108,11 @@ contract SphynxMasterChef is Ownable {
 	function depositRewardToken(uint256 _amount) external onlyOwner {
 		rewardBalance = rewardBalance.add(_amount);
 		IBEP20(sphynx).safeTransferFrom(msg.sender, address(this), _amount);
+	}
+
+	function emergencyWithdrawRewardToken(uint256 _amount) external onlyOwner {
+		rewardBalance = rewardBalance.sub(_amount);
+		IBEP20(sphynx).safeTransfer(msg.sender, _amount);
 	}
 
 	// Add a new lp to the pool. Can only be called by the owner.
@@ -189,6 +206,7 @@ contract SphynxMasterChef is Ownable {
 
 	// Deposit LP tokens to MasterChef for sphynx allocation.
 	function deposit(uint256 _pid, uint256 _amount) public {
+		require(!onlyAutoVault || msg.sender == autoVault, "not-auto-vault");
 		require(_pid != 0, 'deposit sphynx by staking');
 
 		PoolInfo storage pool = poolInfo[_pid];
@@ -230,6 +248,7 @@ contract SphynxMasterChef is Ownable {
 
 	// Stake sphynx tokens to MasterChef
 	function enterStaking(uint256 _amount) public {
+		require(!onlyAutoVault || msg.sender == autoVault, "not-auto-vault");
 		PoolInfo storage pool = poolInfo[0];
 		UserInfo storage user = userInfo[0][msg.sender];
 		updatePool(0);
@@ -273,6 +292,9 @@ contract SphynxMasterChef is Ownable {
 		PoolInfo storage pool = poolInfo[_pid];
 		UserInfo storage user = userInfo[_pid][msg.sender];
 		pool.lpToken.safeTransfer(address(msg.sender), user.amount);
+		if (_pid == 0) {
+			stakedTokens = stakedTokens.sub(user.amount);
+		}
 		emit EmergencyWithdraw(msg.sender, _pid, user.amount);
 		user.amount = 0;
 		user.rewardDebt = 0;
@@ -284,7 +306,9 @@ contract SphynxMasterChef is Ownable {
 			rewardBalance = rewardBalance.sub(_amount);
 		}
 		uint256 amount = _amount.mul(toBurn).div(100);
-		sphynx.transfer(0x000000000000000000000000000000000000dEaD, amount);
+		if (amount > 0) {
+			sphynx.transfer(0x000000000000000000000000000000000000dEaD, amount);
+		}
 		sphynx.transfer(_to, _amount.sub(amount));
 	}
 

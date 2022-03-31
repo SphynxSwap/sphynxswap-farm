@@ -862,13 +862,13 @@ contract SphynxVault is Ownable, Pausable {
 
     uint256 public constant MAX_PERFORMANCE_FEE = 500; // 5%
     uint256 public constant MAX_CALL_FEE = 10000; // 100%
-    uint256 public constant MAX_WITHDRAW_FEE = 1000; // 100%
+    uint256 public constant MAX_WITHDRAW_FEE = 10000; // 100%
     uint256 public constant MAX_WITHDRAW_FEE_PERIOD = 72000 hours; // 3000 days
 
     uint256 public performanceFee = 200; // 2%
     uint256 public callFee = 25; // 0.25%
-    uint256 public withdrawFee = 3000; // 30%
-    uint256 public withdrawFeePeriod = 720 hours; // 30 days
+    uint256 public withdrawFee = 2000; // 20%
+    uint256 public withdrawFeePeriod = 90 days; // 90 days
 
     event Deposit(address indexed sender, uint256 amount, uint256 shares, uint256 lastDepositedTime);
     event Withdraw(address indexed sender, uint256 amount, uint256 shares);
